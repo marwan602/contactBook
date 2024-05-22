@@ -34,7 +34,7 @@ void PersonDatabase::createDb(const std::string& dbName) {
 }
 
 bool PersonDatabase::appendPerson(const Person& p) {
-    if (file.tellg() == 15 || !findPerson(p.phoneNumber)) {
+    if (file.tellg() == EMPTYJSON || !findPerson(p.phoneNumber)) {
         file.seekp(-3, std::ios_base::end);
         if (file.tellg() == EMPTYJSON) {
             file << PersonSerializer::toJson(p).str() << "\n]\n}";
@@ -49,26 +49,45 @@ bool PersonDatabase::appendPerson(const Person& p) {
 PersonDatabase::~PersonDatabase() {
     if (file.is_open()) file.close();
 }
-
-bool PersonDatabase::findPerson(const std::string& searchKey) {
+std::vector<Person> PersonDatabase::getAllPeople(){
     std::stringstream content;
-    std::vector<std::string> splitArr;
+    std::vector<Person> splitArr;
     std::string temp;
     if (file) {
         content << file.rdbuf();
     }
     while (getline(content, temp, '{')) {
-        splitArr.push_back(temp);
+        splitArr.push_back(PersonSerializer::fromJson((std::stringstream) temp));
     }
-    for (const auto &str: splitArr) {
-        Person comp = PersonSerializer::fromJson((std::stringstream) str);
-        if (searchKey == comp.phoneNumber) {
-            std::cout << "Name of user: " << comp.name << std::endl;
-            std::cout << "Age of user: " << comp.age << std::endl;
-            std::cout << "Phone number of user: " << comp.phoneNumber << std::endl;
-            std::cout << "Address of user: " << comp.address << std::endl;
+    return splitArr;
+}
+bool PersonDatabase::findPerson(const std::string& searchKey) {
+    for (const auto& obj: getAllPeople()) {
+        if (searchKey == obj.phoneNumber) {
+            std::cout << "Name of user: " << obj.name << std::endl;
+            std::cout << "Age of user: " << obj.age << std::endl;
+            std::cout << "Phone number of user: " << obj.phoneNumber << std::endl;
+            std::cout << "Address of user: " << obj.address << std::endl;
             return true;
         }
     }
+    return false;
+}
+
+bool PersonDatabase::deletePerson(const std::string &searchKey) {
+    /*
+     * Use get all people to get a _Vector_ (not array) of people
+     * Recreate database while skipping over the unwanted person
+     */
+    return false;
+}
+
+bool PersonDatabase::updatePerson(const std::string &searchKey) {
+    /*
+     * Get all people to get vector of people
+     * iterate over people till you find the phone number matching the search key
+     * edit what is requested
+     * recreate database.
+     */
     return false;
 }

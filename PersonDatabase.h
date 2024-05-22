@@ -13,6 +13,7 @@ class PersonDatabase {
 public:
     void openDb(const std::string& dbName);
     void printDb();
+    std::vector<Person> getAllPeople();
     bool appendPerson(const Person& p);
     bool deletePerson(const std::string& searchKey);
     bool findPerson(const std::string& searchKey);
