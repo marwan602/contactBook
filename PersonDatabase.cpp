@@ -9,7 +9,7 @@
 #include <sstream>
 #include <vector>
 
-const int EMPTYJSON = 15;
+const int EMPTYJSON = 18;
 
 bool fileExists(const std::string& dbName) {
     std::ifstream ifile;
@@ -20,6 +20,8 @@ bool fileExists(const std::string& dbName) {
 void PersonDatabase::openDb(const std::string& dbName) {
     if (fileExists(dbName)) {
         file.open(dbName + ".json");
+        file.seekp(0,std::ios_base::end);
+        std::cout<<file.tellg();
         std::cout << "File found! Opening file...\n";
         return;
     }
@@ -34,9 +36,10 @@ void PersonDatabase::createDb(const std::string& dbName) {
 }
 
 bool PersonDatabase::appendPerson(const Person& p) {
+    file.seekp(0,std::ios_base::end);
     if (file.tellg() == EMPTYJSON || !findPerson(p.phoneNumber)) {
         file.seekp(-3, std::ios_base::end);
-        if (file.tellg() == EMPTYJSON) {
+        if (file.tellg() == EMPTYJSON-3) {
             file << PersonSerializer::toJson(p).str() << "\n]\n}";
         } else {
             file << "," << PersonSerializer::toJson(p).str() << "\n]\n}";
