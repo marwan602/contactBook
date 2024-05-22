@@ -8,4 +8,6 @@ add_executable(untitled6 main.cpp
         PersonDatabase.cpp
         PersonDatabase.h
         PersonSerializer.cpp
-        PersonSerializer.h)
+        PersonSerializer.h
+        gui.cpp
+        gui.h)

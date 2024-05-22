@@ -21,7 +21,6 @@ void PersonDatabase::openDb(const std::string& dbName) {
     if (fileExists(dbName)) {
         file.open(dbName + ".json");
         file.seekp(0,std::ios_base::end);
-        std::cout<<file.tellg();
         std::cout << "File found! Opening file...\n";
         return;
     }
@@ -56,11 +55,14 @@ std::vector<Person> PersonDatabase::getAllPeople(){
     std::stringstream content;
     std::vector<Person> splitArr;
     std::string temp;
+    Person p;
     if (file) {
+        file.seekp(0);
         content << file.rdbuf();
     }
     while (getline(content, temp, '{')) {
-        splitArr.push_back(PersonSerializer::fromJson((std::stringstream) temp));
+        p = PersonSerializer::fromJson((std::stringstream) temp);
+        splitArr.push_back(p);
     }
     return splitArr;
 }

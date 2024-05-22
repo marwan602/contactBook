@@ -3,12 +3,15 @@
 #include <sstream>
 #include "PersonSerializer.h"
 #include "PersonDatabase.h"
+#include "gui.h"
 int main()
 {
-    Person marwan{"Marwan", 19, "01288997036", "Maadi"};
-    Person marwan2 = PersonSerializer::fromJson(PersonSerializer::toJson(marwan));
-    std::cout<<marwan.age<<" "<<marwan.name<<marwan.phoneNumber<<std::endl;
+    gui::horizontal_line();
+    gui::vertical_line_Modes(); //prints operations on file
+    gui::horizontal_line();
     PersonDatabase pdb;
+    Person marwan("Marwan",18,"01288997036","Maadi");
     pdb.openDb("lol");
     pdb.appendPerson(marwan);
+
 }
