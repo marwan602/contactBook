@@ -8,9 +8,6 @@
 #include <fstream>
 #include <sstream>
 #include <vector>
-
-const int EMPTYJSON = 18;
-
 bool fileExists(const std::string& dbName) {
     std::ifstream ifile;
     ifile.open(dbName + ".json");
@@ -20,30 +17,42 @@ bool fileExists(const std::string& dbName) {
 void PersonDatabase::openDb(const std::string& dbName) {
     if (fileExists(dbName)) {
         file.open(dbName + ".json");
+        this->dbName=dbName;
         file.seekp(0,std::ios_base::end);
-        std::cout << "File found! Opening file...\n";
         return;
     }
-    std::cout << "File not found! Creating a new database...\n";
     createDb(dbName);
 }
 
 void PersonDatabase::createDb(const std::string& dbName) {
-    file.open(dbName + ".json", std::ios::out);
-    std::cout << dbName << ".json has been created successfully.\n";
+    this->dbName=dbName;
+    file.open(this->dbName+".json", std::ios::out);
     file << "{\n\"people\" : [\n]\n}";
+
 }
 
 bool PersonDatabase::appendPerson(const Person& p) {
-    file.seekp(0,std::ios_base::end);
-    if (file.tellg() == EMPTYJSON || !findPerson(p.phoneNumber)) {
-        file.seekp(-3, std::ios_base::end);
-        if (file.tellg() == EMPTYJSON-3) {
-            file << PersonSerializer::toJson(p).str() << "\n]\n}";
+    file.seekg(0);
+    std::ifstream reader;
+    reader.open(dbName+".json",std::ios::in);
+    std::stringstream contentHolder;
+    contentHolder << reader.rdbuf();
+    reader.close();
+    std::string content = contentHolder.str();
+    std::string newContent;
+    std::ifstream read;
+    bool flag = findPerson(p.phoneNumber);
+    if (!flag) {
+        size_t endPos = content.rfind("\n]\n}");
+        if (content.find('}') == content.rfind('}')) {
+            newContent = content.substr(0, endPos) + PersonSerializer::toJson(p).str() + "\n]\n}";
         } else {
-            file << "," << PersonSerializer::toJson(p).str() << "\n]\n}";
+            newContent = content.substr(0, endPos) + ",\n" + PersonSerializer::toJson(p).str() + "\n]\n}";
         }
-        return true;
+        file.close();
+        file.open(dbName + ".json", std::ios::in|std::ios::out | std::ios::trunc);
+        file<<newContent;
+
     }
     return false;
 }
@@ -60,10 +69,12 @@ std::vector<Person> PersonDatabase::getAllPeople(){
         file.seekp(0);
         content << file.rdbuf();
     }
-    while (getline(content, temp, '{')) {
+    while (getline(content, temp, '}')) {
         p = PersonSerializer::fromJson((std::stringstream) temp);
         splitArr.push_back(p);
     }
+    if (!splitArr.empty())
+        splitArr.pop_back();
     return splitArr;
 }
 bool PersonDatabase::findPerson(const std::string& searchKey) {
@@ -79,13 +90,28 @@ bool PersonDatabase::findPerson(const std::string& searchKey) {
     return false;
 }
 
-bool PersonDatabase::deletePerson(const std::string &searchKey) {
-    /*
-     * Use get all people to get a _Vector_ (not array) of people
-     * Recreate database while skipping over the unwanted person
-     */
-    return false;
+void PersonDatabase::deletePerson(const std::string &searchKey) {
+    std::vector<Person> people = getAllPeople();
+    std::ofstream temp;
+    temp.open(dbName + ".json", std::ios::out | std::ios::trunc);
+
+    temp << "{\n\"people\" : [\n";
+
+    bool first = true;
+    for (const auto& person : people) {
+        if (person.phoneNumber != searchKey) {
+            if (!first) {
+                temp << ",\n";
+            }
+            temp << PersonSerializer::toJson(person).str();
+            first = false;
+        }
+    }
+
+    temp << "\n]\n}";
+    temp.close();
 }
+
 
 bool PersonDatabase::updatePerson(const std::string &searchKey) {
     /*
@@ -94,5 +120,44 @@ bool PersonDatabase::updatePerson(const std::string &searchKey) {
      * edit what is requested
      * recreate database.
      */
-    return false;
+    std::vector<Person> people = getAllPeople();
+    bool found = false;
+
+    for (auto& person : people) {
+        if (person.phoneNumber == searchKey) {
+            std::cin.ignore();
+            std::cout << "Enter new name:";
+            std::getline(std::cin, person.name);
+            std::cout << "Enter new age:";
+            std::cin >> person.age;
+            std::cin.ignore();
+            std::cout << "Enter new phone number:";
+            std::getline(std::cin, person.phoneNumber);
+            std::cout << "Enter new address:";
+            std::getline(std::cin, person.address);
+            found = true;
+            break;
+        }
+    }
+
+    if (found) {
+
+        std::ofstream outFile(dbName+".json", std::ios::out | std::ios::trunc);
+
+
+        outFile << "{\n\"people\" : [\n";
+        for (size_t i = 0; i < people.size(); ++i) {
+            outFile << PersonSerializer::toJson(people[i]).str();
+            if (i < people.size() - 1) {
+                outFile << ",\n";
+            }
+        }
+        outFile << "\n]\n}";
+        std::cout<<std::endl<<" --> The contact has been successfully updated!"<<std::endl;
+        outFile.close();
+        return true;
+    } else {
+        std::cout << "Person with phone number " << searchKey << " not found.\n";
+        return false;
+    }
 }

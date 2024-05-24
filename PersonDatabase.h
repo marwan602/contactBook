@@ -8,20 +8,21 @@
 #include <string>
 #include "Person.h"
 #include <fstream>
+#include <vector>
 
 class PersonDatabase {
 public:
     void openDb(const std::string& dbName);
-    void printDb();
     std::vector<Person> getAllPeople();
     bool appendPerson(const Person& p);
-    bool deletePerson(const std::string& searchKey);
+    void deletePerson(const std::string& searchKey);
     bool findPerson(const std::string& searchKey);
     bool updatePerson(const std::string& searchKey);
     ~PersonDatabase();
 private:
     void createDb(const std::string& dbName);
     std::fstream file;
+    std::string dbName;
 };
 
 
