@@ -122,7 +122,9 @@ bool PersonDatabase::updatePerson(const std::string &searchKey) {
      */
     std::vector<Person> people = getAllPeople();
     bool found = false;
-
+    bool dupeCheck=false;
+    int counter=0;
+    std::string newPN;
     for (auto& person : people) {
         if (person.phoneNumber == searchKey) {
             std::cin.ignore();
@@ -135,12 +137,14 @@ bool PersonDatabase::updatePerson(const std::string &searchKey) {
             std::getline(std::cin, person.phoneNumber);
             std::cout << "Enter new address:";
             std::getline(std::cin, person.address);
+            newPN=person.phoneNumber;
             found = true;
             break;
         }
     }
-
-    if (found) {
+    for (const auto& check: people) if(check.phoneNumber==newPN) counter++;
+    if (counter>1) dupeCheck=true;
+    if (found&& !dupeCheck) {
 
         std::ofstream outFile(dbName+".json", std::ios::out | std::ios::trunc);
 
@@ -157,7 +161,10 @@ bool PersonDatabase::updatePerson(const std::string &searchKey) {
         outFile.close();
         return true;
     } else {
-        std::cout << "Person with phone number " << searchKey << " not found.\n";
+        if (!dupeCheck)
+            std::cout << "Person with phone number " << searchKey << " not found.\n";
+        else
+            std::cout <<std::endl<< " --> Person with phone number " << newPN << " already exists!"<<std::endl;
         return false;
     }
 }

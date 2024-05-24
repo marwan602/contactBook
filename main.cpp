@@ -9,12 +9,8 @@ int main()
     gui::vertical_line_Modes(); //prints operations on file
     gui::horizontal_line_1();
     PersonDatabase pdb;
-  //  Person marwan("Marwan",18,"01288997034","Maadi");
-  //  pdb.appendPerson(marwan);
         std::cout<<std::endl<<"ChooseMode:";
         std::cin >> chooseMode;
-        //pdb.updatePerson("100");
-       // pdb.deletePerson("01288997035");
         if(chooseMode==1){
            gui::Search_gui();
         }
